@@ -1,0 +1,20 @@
+{
+  "name": "@wickedhostbotai/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "dev": "tsx src/worker.ts",
+    "start": "node dist/worker.js"
+  },
+  "dependencies": {
+    "@wickedhostbotai/ai": "workspace:*",
+    "@wickedhostbotai/core": "workspace:*",
+    "@wickedhostbotai/db": "workspace:*",
+    "@wickedhostbotai/shared": "workspace:*",
+    "@wickedhostbotai/vector": "workspace:*",
+    "dotenv": "^16.6.1"
+  }
+}

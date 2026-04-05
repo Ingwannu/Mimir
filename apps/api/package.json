@@ -1,0 +1,23 @@
+{
+  "name": "@wickedhostbotai/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "dev": "tsx src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "@wickedhostbotai/ai": "workspace:*",
+    "@wickedhostbotai/core": "workspace:*",
+    "@wickedhostbotai/db": "workspace:*",
+    "@wickedhostbotai/shared": "workspace:*",
+    "@wickedhostbotai/vector": "workspace:*",
+    "dotenv": "^16.6.1",
+    "fastify": "^5.6.0",
+    "zod": "^4.1.5"
+  }
+}

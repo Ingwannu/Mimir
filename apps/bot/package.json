@@ -1,0 +1,17 @@
+{
+  "name": "@wickedhostbotai/bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "dev": "tsx src/bot.ts",
+    "start": "node dist/bot.js"
+  },
+  "dependencies": {
+    "@wickedhostbotai/shared": "workspace:*",
+    "discord.js": "14.26.2",
+    "dotenv": "^16.6.1"
+  }
+}

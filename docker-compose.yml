@@ -1,0 +1,163 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wickedhostbotai}
+      POSTGRES_USER: ${POSTGRES_USER:-wickedhost}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wickedhost}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./.data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    image: qdrant/qdrant
+    volumes:
+      - ./.data/qdrant:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -lc ':</dev/tcp/127.0.0.1/6333'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: "@wickedhostbotai/api"
+    environment:
+      NODE_ENV: development
+      WORKSPACE_ID: ${WORKSPACE_ID:-workspace_demo}
+      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-wickedhost}
+      WORKSPACE_NAME: ${WORKSPACE_NAME:-WickedHost}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      WEB_SESSION_SECRET: ${WEB_SESSION_SECRET:-change-me-too}
+      SECRETS_ENCRYPTION_KEY: ${SECRETS_ENCRYPTION_KEY:-change-me-secret-key}
+      VECTOR_BACKEND: ${VECTOR_BACKEND:-qdrant}
+      PGVECTOR_TABLE: ${PGVECTOR_TABLE:-pgvector_chunk_embeddings}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://wickedhost:wickedhost@postgres:5432/wickedhostbotai}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-wickedhostbotai_chunks}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_ANSWER_MODEL: ${OPENAI_ANSWER_MODEL:-gpt-5-nano}
+      OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-5-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      OPENAI_STORE: ${OPENAI_STORE:-false}
+      CHUNK_SIZE: ${CHUNK_SIZE:-700}
+      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-120}
+      MAX_CONTEXT_CHUNKS: ${MAX_CONTEXT_CHUNKS:-4}
+      API_PORT: 4000
+      PUBLIC_API_BASE_URL: http://api:4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-4000}:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:4000/v1/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: "@wickedhostbotai/web"
+    environment:
+      NODE_ENV: development
+      WEB_API_BASE_URL: http://api:4000
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      WEB_SESSION_SECRET: ${WEB_SESSION_SECRET:-change-me-too}
+      PORT: 3000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: "@wickedhostbotai/bot"
+    environment:
+      NODE_ENV: development
+      WORKSPACE_ID: ${WORKSPACE_ID:-workspace_demo}
+      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-wickedhost}
+      WORKSPACE_NAME: ${WORKSPACE_NAME:-WickedHost}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      WEB_SESSION_SECRET: ${WEB_SESSION_SECRET:-change-me-too}
+      OPENAI_ANSWER_MODEL: ${OPENAI_ANSWER_MODEL:-gpt-5-nano}
+      OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-5-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      OPENAI_STORE: ${OPENAI_STORE:-false}
+      PUBLIC_API_BASE_URL: http://api:4000
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      BOT_HEALTH_PORT: 4100
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${BOT_HEALTH_PORT:-4100}:4100"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:4100/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: "@wickedhostbotai/worker"
+    environment:
+      NODE_ENV: development
+      WORKSPACE_ID: ${WORKSPACE_ID:-workspace_demo}
+      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-wickedhost}
+      WORKSPACE_NAME: ${WORKSPACE_NAME:-WickedHost}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      SECRETS_ENCRYPTION_KEY: ${SECRETS_ENCRYPTION_KEY:-change-me-secret-key}
+      VECTOR_BACKEND: ${VECTOR_BACKEND:-qdrant}
+      PGVECTOR_TABLE: ${PGVECTOR_TABLE:-pgvector_chunk_embeddings}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://wickedhost:wickedhost@postgres:5432/wickedhostbotai}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-wickedhostbotai_chunks}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_ANSWER_MODEL: ${OPENAI_ANSWER_MODEL:-gpt-5-nano}
+      OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-5-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      OPENAI_STORE: ${OPENAI_STORE:-false}
+      CHUNK_SIZE: ${CHUNK_SIZE:-700}
+      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-120}
+      MAX_CONTEXT_CHUNKS: ${MAX_CONTEXT_CHUNKS:-4}
+      WORKER_POLL_INTERVAL_MS: ${WORKER_POLL_INTERVAL_MS:-3000}
+      WORKER_HEALTH_PORT: 4200
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WORKER_HEALTH_PORT:-4200}:4200"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:4200/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10

@@ -1,0 +1,27 @@
+{
+  "name": "@wickedhostbotai/db",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "migrate": "tsx src/migrate.ts"
+  },
+  "dependencies": {
+    "@wickedhostbotai/shared": "workspace:*",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.44.5",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.4"
+  }
+}
