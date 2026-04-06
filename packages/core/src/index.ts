@@ -38,6 +38,7 @@ import type {
   QueryRequest,
   QueryResponse,
   SourceLookupItem,
+  TokenUsageSnapshot,
 } from "@wickedhostbotai/shared";
 import type { VectorStoreAdapter } from "@wickedhostbotai/vector";
 import {
@@ -88,8 +89,19 @@ interface QueryExecutionResult {
   confidence: QueryResponse["confidence"];
   needsHuman: QueryResponse["needsHuman"];
   hits: QueryResponse["hits"];
+  usage?: TokenUsageSnapshot;
+  answerModel?: string;
   maxContextChunks: number;
 }
+
+type AnalyticsPeriod = "24h" | "7d" | "30d" | "all";
+type AnalyticsSeriesBucket = {
+  label: string;
+  queryCount: number;
+  totalTokens: number;
+  inputTokens: number;
+  outputTokens: number;
+};
 
 export function createCoreServices(options: CoreServicesOptions) {
   const {
@@ -1293,24 +1305,66 @@ export function createCoreServices(options: CoreServicesOptions) {
       .limit(100);
   }
 
-  async function getAnalytics() {
+  async function getAnalytics(period: AnalyticsPeriod = "all") {
+    const periodStart = getAnalyticsPeriodStart(period);
+    const whereClause = periodStart
+      ? and(
+          eq(queryLogs.workspaceId, workspace.id),
+          sql`${queryLogs.createdAt} >= ${periodStart}`,
+        )
+      : eq(queryLogs.workspaceId, workspace.id);
+
     const [totals] = await db
       .select({
         queryCount: sql<number>`count(*)`,
         handoffCount:
           sql<number>`coalesce(sum(case when ${queryLogs.needsHuman} then 1 else 0 end), 0)`,
+        inputTokens: sql<number>`coalesce(sum(${queryLogs.inputTokens}), 0)`,
+        outputTokens: sql<number>`coalesce(sum(${queryLogs.outputTokens}), 0)`,
+        totalTokens: sql<number>`coalesce(sum(${queryLogs.totalTokens}), 0)`,
       })
       .from(queryLogs)
-      .where(eq(queryLogs.workspaceId, workspace.id));
+      .where(whereClause);
+
+    const queryCount = Number(totals?.queryCount ?? 0);
+    const handoffCount = Number(totals?.handoffCount ?? 0);
+    const totalTokens = Number(totals?.totalTokens ?? 0);
 
     return {
-      queryCount: Number(totals?.queryCount ?? 0),
-      handoffCount: Number(totals?.handoffCount ?? 0),
-      handoffRate:
-        Number(totals?.queryCount ?? 0) === 0
-          ? 0
-          : Number(totals?.handoffCount ?? 0) / Number(totals?.queryCount ?? 1),
+      period,
+      queryCount,
+      handoffCount,
+      handoffRate: queryCount === 0 ? 0 : handoffCount / queryCount,
+      inputTokens: Number(totals?.inputTokens ?? 0),
+      outputTokens: Number(totals?.outputTokens ?? 0),
+      totalTokens,
+      averageTotalTokensPerQuery:
+        queryCount === 0 ? 0 : totalTokens / queryCount,
     };
+  }
+
+  async function getAnalyticsSeries(period: AnalyticsPeriod = "all") {
+    const periodStart = getAnalyticsPeriodStart(period);
+    const whereClause = periodStart
+      ? and(
+          eq(queryLogs.workspaceId, workspace.id),
+          sql`${queryLogs.createdAt} >= ${periodStart}`,
+        )
+      : eq(queryLogs.workspaceId, workspace.id);
+
+    const rows = await db
+      .select({
+        createdAt: queryLogs.createdAt,
+        inputTokens: queryLogs.inputTokens,
+        outputTokens: queryLogs.outputTokens,
+        totalTokens: queryLogs.totalTokens,
+      })
+      .from(queryLogs)
+      .where(whereClause)
+      .orderBy(queryLogs.createdAt);
+
+    const buckets = buildAnalyticsSeries(period, rows);
+    return { period, buckets };
   }
 
   async function retryJob(jobId: string) {
@@ -1357,6 +1411,14 @@ export function createCoreServices(options: CoreServicesOptions) {
       citations: execution.citations,
       confidence: execution.confidence,
       needsHuman: execution.needsHuman,
+      ...(execution.answerModel ? { answerModel: execution.answerModel } : {}),
+      ...(execution.usage
+        ? {
+            inputTokens: execution.usage.inputTokens,
+            outputTokens: execution.usage.outputTokens,
+            totalTokens: execution.usage.totalTokens,
+          }
+        : {}),
     });
 
     return execution;
@@ -1376,6 +1438,8 @@ export function createCoreServices(options: CoreServicesOptions) {
         citations: response.citations,
         confidence: response.confidence,
         needsHuman: response.needsHuman,
+        ...(response.usage ? { usage: response.usage } : {}),
+        ...(response.answerModel ? { answerModel: response.answerModel } : {}),
       },
       hits: response.hits,
     };
@@ -1411,6 +1475,182 @@ export function createCoreServices(options: CoreServicesOptions) {
       hits,
       maxContextChunks,
     };
+  }
+
+  function getAnalyticsPeriodStart(period: AnalyticsPeriod): Date | undefined {
+    const now = Date.now();
+
+    switch (period) {
+      case "24h":
+        return new Date(now - 24 * 60 * 60 * 1000);
+      case "7d":
+        return new Date(now - 7 * 24 * 60 * 60 * 1000);
+      case "30d":
+        return new Date(now - 30 * 24 * 60 * 60 * 1000);
+      case "all":
+      default:
+        return undefined;
+    }
+  }
+
+  function buildAnalyticsSeries(
+    period: AnalyticsPeriod,
+    rows: Array<{
+      createdAt: Date;
+      inputTokens: number | null;
+      outputTokens: number | null;
+      totalTokens: number | null;
+    }>,
+  ): AnalyticsSeriesBucket[] {
+    const now = new Date();
+
+    switch (period) {
+      case "24h":
+        return createTimeBuckets({
+          count: 24,
+          unit: "hour",
+          end: now,
+          formatLabel: (date) =>
+            new Intl.DateTimeFormat("en-US", {
+              hour: "numeric",
+            }).format(date),
+          rows,
+        });
+      case "7d":
+        return createTimeBuckets({
+          count: 7,
+          unit: "day",
+          end: now,
+          formatLabel: (date) =>
+            new Intl.DateTimeFormat("en-US", {
+              month: "short",
+              day: "numeric",
+            }).format(date),
+          rows,
+        });
+      case "30d":
+        return createTimeBuckets({
+          count: 30,
+          unit: "day",
+          end: now,
+          formatLabel: (date) =>
+            new Intl.DateTimeFormat("en-US", {
+              month: "short",
+              day: "numeric",
+            }).format(date),
+          rows,
+        });
+      case "all":
+      default:
+        return createMonthlyBuckets(rows, now);
+    }
+  }
+
+  function createTimeBuckets(input: {
+    count: number;
+    unit: "hour" | "day";
+    end: Date;
+    formatLabel: (date: Date) => string;
+    rows: Array<{
+      createdAt: Date;
+      inputTokens: number | null;
+      outputTokens: number | null;
+      totalTokens: number | null;
+    }>;
+  }): AnalyticsSeriesBucket[] {
+    const { count, unit, end, formatLabel, rows } = input;
+    const buckets = Array.from({ length: count }, (_, index) => {
+      const start = new Date(end);
+      if (unit === "hour") {
+        start.setMinutes(0, 0, 0);
+        start.setHours(start.getHours() - (count - 1 - index));
+      } else {
+        start.setHours(0, 0, 0, 0);
+        start.setDate(start.getDate() - (count - 1 - index));
+      }
+
+      const next = new Date(start);
+      if (unit === "hour") {
+        next.setHours(next.getHours() + 1);
+      } else {
+        next.setDate(next.getDate() + 1);
+      }
+
+      return {
+        start,
+        end: next,
+        bucket: {
+          label: formatLabel(start),
+          queryCount: 0,
+          totalTokens: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+        },
+      };
+    });
+
+    for (const row of rows) {
+      const createdAt = new Date(row.createdAt);
+      const match = buckets.find(
+        ({ start, end: bucketEnd }) =>
+          createdAt >= start && createdAt < bucketEnd,
+      );
+      if (!match) {
+        continue;
+      }
+
+      match.bucket.queryCount += 1;
+      match.bucket.inputTokens += row.inputTokens ?? 0;
+      match.bucket.outputTokens += row.outputTokens ?? 0;
+      match.bucket.totalTokens += row.totalTokens ?? 0;
+    }
+
+    return buckets.map(({ bucket }) => bucket);
+  }
+
+  function createMonthlyBuckets(
+    rows: Array<{
+      createdAt: Date;
+      inputTokens: number | null;
+      outputTokens: number | null;
+      totalTokens: number | null;
+    }>,
+    now: Date,
+  ): AnalyticsSeriesBucket[] {
+    const lastTwelveMonths = Array.from({ length: 12 }, (_, index) => {
+      const start = new Date(now.getFullYear(), now.getMonth() - (11 - index), 1);
+      const end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+      return {
+        start,
+        end,
+        bucket: {
+          label: new Intl.DateTimeFormat("en-US", {
+            month: "short",
+          }).format(start),
+          queryCount: 0,
+          totalTokens: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+        },
+      };
+    });
+
+    for (const row of rows) {
+      const createdAt = new Date(row.createdAt);
+      const match = lastTwelveMonths.find(
+        ({ start, end }) => createdAt >= start && createdAt < end,
+      );
+      if (!match) {
+        continue;
+      }
+
+      match.bucket.queryCount += 1;
+      match.bucket.inputTokens += row.inputTokens ?? 0;
+      match.bucket.outputTokens += row.outputTokens ?? 0;
+      match.bucket.totalTokens += row.totalTokens ?? 0;
+    }
+
+    return lastTwelveMonths.map(({ bucket }) => bucket);
   }
 
   async function runWorkerTick(workerId: string): Promise<WorkerTickResult> {
@@ -1737,6 +1977,7 @@ export function createCoreServices(options: CoreServicesOptions) {
     getDashboardSummary,
     listQueryLogs,
     getAnalytics,
+    getAnalyticsSeries,
     retryJob,
     query,
     preview,

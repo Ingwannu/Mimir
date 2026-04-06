@@ -443,9 +443,13 @@ export const queryLogs = pgTable(
     question: text("question").notNull(),
     normalizedQuestion: text("normalized_question"),
     answer: text("answer"),
+    answerModel: text("answer_model"),
     citations: jsonb("citations").$type<string[]>().notNull().default([]),
     confidence: doublePrecision("confidence"),
     needsHuman: boolean("needs_human").notNull().default(false),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    totalTokens: integer("total_tokens"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

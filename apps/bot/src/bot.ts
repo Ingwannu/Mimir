@@ -206,7 +206,7 @@ async function main(): Promise<void> {
 
     const mentioned = message.mentions.users.has(client.user.id);
     const freeformEligible =
-      settings.mentionOnly === false && looksLikeQuestion(message.content);
+      settings.mentionOnly === false && message.content.trim().length > 0;
 
     if (!mentioned && !freeformEligible) {
       return;
@@ -651,11 +651,6 @@ function stripBotMention(content: string, userId: string): string {
     .replaceAll(`<@${userId}>`, "")
     .replaceAll(`<@!${userId}>`, "")
     .trim();
-}
-
-function looksLikeQuestion(content: string): boolean {
-  const normalized = content.trim();
-  return normalized.length >= 8 && normalized.endsWith("?");
 }
 
 function isAllowedChannel(settings: DiscordSettings, channelId: string): boolean {

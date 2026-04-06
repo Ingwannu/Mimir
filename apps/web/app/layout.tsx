@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 
 import { logoutAction } from "./actions";
@@ -39,16 +38,6 @@ export default async function RootLayout({
       <body>
         <div className="shell">
           <header className="topbar">
-            <div className="brand-block">
-              <Link className="brand" href="/">
-                wickedhostbotai
-              </Link>
-              <p className="lede">
-                {isKo
-                  ? "Postgres를 원장으로, Qdrant를 검색 인덱스로 사용하는 Discord 지원 RAG 콘솔입니다."
-                  : "Discord support RAG with Postgres as ledger and Qdrant as index."}
-              </p>
-            </div>
             <div className="topbar-actions">
               <LanguageToggle locale={locale} />
               {currentUser ? (

@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import {
   type SearchHit,
   type StructuredAnswer,
+  type TokenUsageSnapshot,
   structuredAnswerSchema,
 } from "@wickedhostbotai/shared";
 
@@ -18,9 +19,14 @@ export interface AnswerRequest {
   fallbackModel?: string | undefined;
 }
 
+export interface AnswerResult extends StructuredAnswer {
+  usage?: TokenUsageSnapshot;
+  answerModel?: string;
+}
+
 export interface AnswerProvider {
   health(): Promise<ProviderHealth>;
-  answer(input: AnswerRequest): Promise<StructuredAnswer>;
+  answer(input: AnswerRequest): Promise<AnswerResult>;
 }
 
 export interface EmbeddingProvider {
@@ -99,7 +105,7 @@ export class OpenAiAnswerProvider implements AnswerProvider {
     return { ok: true };
   }
 
-  public async answer(input: AnswerRequest): Promise<StructuredAnswer> {
+  public async answer(input: AnswerRequest): Promise<AnswerResult> {
     const primaryModel = input.answerModel ?? this.answerModel;
     const fallbackModel = input.fallbackModel ?? this.fallbackModel;
     const client = await this.getClient();
@@ -123,7 +129,7 @@ export class OpenAiAnswerProvider implements AnswerProvider {
     client: OpenAI,
     model: string,
     input: AnswerRequest,
-  ): Promise<StructuredAnswer> {
+  ): Promise<AnswerResult> {
     const response = (await client.responses.create({
       model,
       store: this.storeResponses,
@@ -148,6 +154,12 @@ export class OpenAiAnswerProvider implements AnswerProvider {
       },
     })) as {
       output_text?: string;
+      model?: string;
+      usage?: {
+        input_tokens?: number;
+        output_tokens?: number;
+        total_tokens?: number;
+      };
       output?: Array<{
         content?: Array<{ text?: string }>;
       }>;
@@ -158,7 +170,24 @@ export class OpenAiAnswerProvider implements AnswerProvider {
       response.output?.[0]?.content?.[0]?.text ??
       JSON.stringify(createMockAnswer(input));
 
-    return structuredAnswerSchema.parse(JSON.parse(rawText));
+    const parsed = structuredAnswerSchema.parse(JSON.parse(rawText));
+
+    const usage =
+      typeof response.usage?.input_tokens === "number" &&
+      typeof response.usage?.output_tokens === "number" &&
+      typeof response.usage?.total_tokens === "number"
+        ? {
+            inputTokens: response.usage.input_tokens,
+            outputTokens: response.usage.output_tokens,
+            totalTokens: response.usage.total_tokens,
+          }
+        : undefined;
+
+    return {
+      ...parsed,
+      answerModel: response.model ?? model,
+      ...(usage ? { usage } : {}),
+    };
   }
 
   private async getClient(): Promise<OpenAI | undefined> {

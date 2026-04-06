@@ -340,7 +340,24 @@ async function main(): Promise<void> {
 
   app.get("/v1/admin/jobs", async () => services.listJobs());
   app.get("/v1/admin/logs", async () => services.listQueryLogs());
-  app.get("/v1/admin/analytics", async () => services.getAnalytics());
+  app.get("/v1/admin/analytics", async (request) => {
+    const query = z
+      .object({
+        period: z.enum(["24h", "7d", "30d", "all"]).optional(),
+      })
+      .parse(request.query);
+
+    return services.getAnalytics(query.period ?? "all");
+  });
+  app.get("/v1/admin/analytics/series", async (request) => {
+    const query = z
+      .object({
+        period: z.enum(["24h", "7d", "30d", "all"]).optional(),
+      })
+      .parse(request.query);
+
+    return services.getAnalyticsSeries(query.period ?? "all");
+  });
 
   app.post("/v1/admin/jobs/:id/retry", async (request) => {
     const params = idParamSchema.parse(request.params);

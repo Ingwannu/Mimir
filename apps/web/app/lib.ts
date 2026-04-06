@@ -72,15 +72,24 @@ export interface QueryLogRecord {
   id: string;
   question: string;
   answer: string | null;
+  answerModel?: string | null;
   confidence: number | null;
   needsHuman: boolean;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  totalTokens?: number | null;
   createdAt: string;
 }
 
 export interface AnalyticsSnapshot {
+  period: "24h" | "7d" | "30d" | "all";
   queryCount: number;
   handoffCount: number;
   handoffRate: number;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  averageTotalTokensPerQuery: number;
 }
 
 export interface ProviderSettings {
@@ -173,8 +182,12 @@ export async function getQueryLogs(): Promise<QueryLogRecord[]> {
   return fetchJson<QueryLogRecord[]>("/v1/admin/logs");
 }
 
-export async function getAnalytics(): Promise<AnalyticsSnapshot | null> {
-  return safeFetchJson<AnalyticsSnapshot>("/v1/admin/analytics");
+export async function getAnalytics(
+  period: AnalyticsSnapshot["period"] = "all",
+): Promise<AnalyticsSnapshot | null> {
+  return safeFetchJson<AnalyticsSnapshot>(
+    `/v1/admin/analytics?period=${encodeURIComponent(period)}`,
+  );
 }
 
 export async function getProviderSettings(): Promise<ProviderSettings> {

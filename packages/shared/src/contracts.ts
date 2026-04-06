@@ -40,6 +40,12 @@ export const structuredAnswerSchema = z.object({
   needsHuman: z.boolean(),
 });
 
+export const tokenUsageSchema = z.object({
+  inputTokens: z.number().int().nonnegative(),
+  outputTokens: z.number().int().nonnegative(),
+  totalTokens: z.number().int().nonnegative(),
+});
+
 export const searchHitSchema = z.object({
   chunkId: z.string().min(1),
   workspaceId: z.string().min(1),
@@ -53,11 +59,16 @@ export const searchHitSchema = z.object({
 
 export const queryResponseSchema = structuredAnswerSchema.extend({
   hits: z.array(searchHitSchema),
+  usage: tokenUsageSchema.optional(),
+  answerModel: z.string().optional(),
 });
 
 export const queryPreviewResponseSchema = z.object({
   prompt: z.string(),
-  answer: structuredAnswerSchema,
+  answer: structuredAnswerSchema.extend({
+    usage: tokenUsageSchema.optional(),
+    answerModel: z.string().optional(),
+  }),
   hits: z.array(searchHitSchema),
 });
 
@@ -196,6 +207,7 @@ export type IndexJobType = z.infer<typeof indexJobTypeSchema>;
 export type IndexJobStatus = z.infer<typeof indexJobStatusSchema>;
 export type QueryRequest = z.infer<typeof queryRequestSchema>;
 export type StructuredAnswer = z.infer<typeof structuredAnswerSchema>;
+export type TokenUsageSnapshot = z.infer<typeof tokenUsageSchema>;
 export type SearchHit = z.infer<typeof searchHitSchema>;
 export type QueryResponse = z.infer<typeof queryResponseSchema>;
 export type QueryPreviewResponse = z.infer<typeof queryPreviewResponseSchema>;

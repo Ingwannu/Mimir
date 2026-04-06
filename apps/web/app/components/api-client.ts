@@ -63,6 +63,12 @@ export interface QueryAnswerRecord {
   citations: string[];
   confidence: number;
   needsHuman: boolean;
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  };
+  answerModel?: string;
 }
 
 export interface QueryPreviewRecord {
@@ -105,9 +111,27 @@ export interface DiscordSettingsRecord {
 }
 
 export interface AnalyticsRecord {
+  period: "24h" | "7d" | "30d" | "all";
   queryCount: number;
   handoffCount: number;
   handoffRate: number;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  averageTotalTokensPerQuery: number;
+}
+
+export interface AnalyticsSeriesBucketRecord {
+  label: string;
+  queryCount: number;
+  totalTokens: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface AnalyticsSeriesRecord {
+  period: "24h" | "7d" | "30d" | "all";
+  buckets: AnalyticsSeriesBucketRecord[];
 }
 
 export interface DashboardSummaryRecord {
@@ -122,8 +146,12 @@ export interface QueryLogRecord {
   id: string;
   question: string;
   answer?: string | null;
+  answerModel?: string | null;
   confidence?: number | null;
   needsHuman: boolean;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  totalTokens?: number | null;
   createdAt: string;
 }
 
