@@ -1,7 +1,7 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { Pool } from "pg";
 
-import type { EmbeddedChunk, SearchHit } from "@wickedhostbotai/shared";
+import type { EmbeddedChunk, SearchHit } from "@mimir/shared";
 
 export interface VectorQueryInput {
   workspaceId: string;

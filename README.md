@@ -1,4 +1,4 @@
-# wickedhostbotai
+# Mimir
 
 Self-hosted TypeScript RAG platform scaffold for a Discord support bot, admin dashboard, and indexing worker.
 

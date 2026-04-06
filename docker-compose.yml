@@ -3,9 +3,9 @@ services:
     image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-wickedhostbotai}
-      POSTGRES_USER: ${POSTGRES_USER:-wickedhost}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wickedhost}
+      POSTGRES_DB: ${POSTGRES_DB:-mimir}
+      POSTGRES_USER: ${POSTGRES_USER:-mimir}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mimir}
     volumes:
       - ./.data/postgres:/var/lib/postgresql/data
     healthcheck:
@@ -31,20 +31,20 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SERVICE_NAME: "@wickedhostbotai/api"
+        SERVICE_NAME: "@mimir/api"
     environment:
       NODE_ENV: production
       WORKSPACE_ID: ${WORKSPACE_ID:-workspace_demo}
-      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-wickedhost}
-      WORKSPACE_NAME: ${WORKSPACE_NAME:-WickedHost}
+      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-mimir}
+      WORKSPACE_NAME: ${WORKSPACE_NAME:-Mimir}
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       WEB_SESSION_SECRET: ${WEB_SESSION_SECRET:-change-me-too}
       SECRETS_ENCRYPTION_KEY: ${SECRETS_ENCRYPTION_KEY:-change-me-secret-key}
       VECTOR_BACKEND: ${VECTOR_BACKEND:-qdrant}
       PGVECTOR_TABLE: ${PGVECTOR_TABLE:-pgvector_chunk_embeddings}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://wickedhost:wickedhost@postgres:5432/wickedhostbotai}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://mimir:mimir@postgres:5432/mimir}
       QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
-      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-wickedhostbotai_chunks}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-mimir_chunks}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_ANSWER_MODEL: ${OPENAI_ANSWER_MODEL:-gpt-5-nano}
       OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-5-mini}
@@ -74,7 +74,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SERVICE_NAME: "@wickedhostbotai/web"
+        SERVICE_NAME: "@mimir/web"
     environment:
       NODE_ENV: production
       WEB_API_BASE_URL: http://api:4000
@@ -98,12 +98,12 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SERVICE_NAME: "@wickedhostbotai/bot"
+        SERVICE_NAME: "@mimir/bot"
     environment:
       NODE_ENV: production
       WORKSPACE_ID: ${WORKSPACE_ID:-workspace_demo}
-      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-wickedhost}
-      WORKSPACE_NAME: ${WORKSPACE_NAME:-WickedHost}
+      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-mimir}
+      WORKSPACE_NAME: ${WORKSPACE_NAME:-Mimir}
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       WEB_SESSION_SECRET: ${WEB_SESSION_SECRET:-change-me-too}
       OPENAI_ANSWER_MODEL: ${OPENAI_ANSWER_MODEL:-gpt-5-nano}
@@ -132,19 +132,19 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SERVICE_NAME: "@wickedhostbotai/worker"
+        SERVICE_NAME: "@mimir/worker"
     environment:
       NODE_ENV: production
       WORKSPACE_ID: ${WORKSPACE_ID:-workspace_demo}
-      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-wickedhost}
-      WORKSPACE_NAME: ${WORKSPACE_NAME:-WickedHost}
+      WORKSPACE_SLUG: ${WORKSPACE_SLUG:-mimir}
+      WORKSPACE_NAME: ${WORKSPACE_NAME:-Mimir}
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       SECRETS_ENCRYPTION_KEY: ${SECRETS_ENCRYPTION_KEY:-change-me-secret-key}
       VECTOR_BACKEND: ${VECTOR_BACKEND:-qdrant}
       PGVECTOR_TABLE: ${PGVECTOR_TABLE:-pgvector_chunk_embeddings}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://wickedhost:wickedhost@postgres:5432/wickedhostbotai}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://mimir:mimir@postgres:5432/mimir}
       QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
-      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-wickedhostbotai_chunks}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-mimir_chunks}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_ANSWER_MODEL: ${OPENAI_ANSWER_MODEL:-gpt-5-nano}
       OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-5-mini}

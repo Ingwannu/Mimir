@@ -1,5 +1,5 @@
 {
-  "name": "@wickedhostbotai/ai",
+  "name": "@mimir/ai",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -15,7 +15,7 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@wickedhostbotai/shared": "workspace:*",
+    "@mimir/shared": "workspace:*",
     "openai": "^6.4.0"
   }
 }

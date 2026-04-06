@@ -7,9 +7,9 @@ import { z } from "zod";
 import {
   OpenAiAnswerProvider,
   OpenAiEmbeddingProvider,
-} from "@wickedhostbotai/ai";
-import { createCoreServices } from "@wickedhostbotai/core";
-import { createDatabaseConnection, runMigrations } from "@wickedhostbotai/db";
+} from "@mimir/ai";
+import { createCoreServices } from "@mimir/core";
+import { createDatabaseConnection, runMigrations } from "@mimir/db";
 import {
   authBootstrapSchema,
   authLoginSchema,
@@ -21,8 +21,8 @@ import {
   parseApiEnv,
   providerSettingsSchema,
   queryRequestSchema,
-} from "@wickedhostbotai/shared";
-import { createVectorStore } from "@wickedhostbotai/vector";
+} from "@mimir/shared";
+import { createVectorStore } from "@mimir/vector";
 
 const idParamSchema = z.object({ id: z.string().min(1) });
 const sourceLookupSchema = z.object({
@@ -155,7 +155,7 @@ async function main(): Promise<void> {
   });
 
   app.get("/", async () => ({
-    name: "wickedhostbotai-api",
+    name: "mimir-api",
     version: "0.1.0",
   }));
 

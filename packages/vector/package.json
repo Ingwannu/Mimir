@@ -1,5 +1,5 @@
 {
-  "name": "@wickedhostbotai/vector",
+  "name": "@mimir/vector",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@qdrant/js-client-rest": "^1.14.1",
-    "@wickedhostbotai/shared": "workspace:*",
+    "@mimir/shared": "workspace:*",
     "pg": "^8.16.3"
   }
 }

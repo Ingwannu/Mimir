@@ -15,8 +15,8 @@ const optionalString = z
 const commonSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   WORKSPACE_ID: z.string().min(1).default("workspace_demo"),
-  WORKSPACE_SLUG: z.string().min(1).default("wickedhost"),
-  WORKSPACE_NAME: z.string().min(1).default("WickedHost"),
+  WORKSPACE_SLUG: z.string().min(1).default("mimir"),
+  WORKSPACE_NAME: z.string().min(1).default("Mimir"),
   ADMIN_TOKEN: optionalString,
   WEB_SESSION_SECRET: optionalString,
   SECRETS_ENCRYPTION_KEY: optionalString,
@@ -40,7 +40,7 @@ const commonSchema = z.object({
 const storageSchema = z.object({
   DATABASE_URL: z.string().min(1),
   QDRANT_URL: z.string().url(),
-  QDRANT_COLLECTION: z.string().min(1).default("wickedhostbotai_chunks"),
+  QDRANT_COLLECTION: z.string().min(1).default("mimir_chunks"),
   QDRANT_PORT: z.coerce.number().int().positive().default(6334),
   PGVECTOR_TABLE: z.string().min(1).default("pgvector_chunk_embeddings"),
 });

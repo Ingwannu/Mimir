@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 
@@ -9,7 +11,7 @@ import { getLocale } from "./locale-server";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "wickedhostbotai",
+  title: "Mimir",
   description: "Self-hosted Discord support RAG scaffold",
 };
 
@@ -38,6 +40,27 @@ export default async function RootLayout({
       <body>
         <div className="shell">
           <header className="topbar">
+            <div className="brand-block">
+              <Link className="brand-link" href="/">
+                <Image
+                  alt="Mimir logo"
+                  className="brand-logo"
+                  height={36}
+                  priority
+                  src="/mimir.svg"
+                  width={36}
+                />
+                <div className="brand-text">
+                  <span className="brand">Mimir</span>
+                  <span className="brand-subtitle">
+                    {isKo
+                      ? "Discord 지원 RAG 운영 콘솔"
+                      : "Discord support RAG operator console"}
+                  </span>
+                </div>
+              </Link>
+            </div>
+            <TopNav locale={locale} />
             <div className="topbar-actions">
               <LanguageToggle locale={locale} />
               {currentUser ? (
@@ -58,7 +81,6 @@ export default async function RootLayout({
               )}
             </div>
           </header>
-          <TopNav locale={locale} />
           <main className="content">
             <div className="content-frame">{children}</div>
           </main>

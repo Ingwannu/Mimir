@@ -9,6 +9,6 @@ export default defineConfig({
   dbCredentials: {
     url:
       process.env.DATABASE_URL ??
-      "postgresql://wickedhost:wickedhost@localhost:5432/wickedhostbotai",
+      "postgresql://mimir:mimir@localhost:5432/mimir",
   },
 });

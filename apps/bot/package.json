@@ -1,5 +1,5 @@
 {
-  "name": "@wickedhostbotai/bot",
+  "name": "@mimir/bot",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "start": "node dist/bot.js"
   },
   "dependencies": {
-    "@wickedhostbotai/shared": "workspace:*",
+    "@mimir/shared": "workspace:*",
     "discord.js": "14.26.2",
     "dotenv": "^16.6.1"
   }

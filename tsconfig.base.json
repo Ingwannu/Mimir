@@ -14,11 +14,11 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@wickedhostbotai/shared": ["packages/shared/src/index.ts"],
-      "@wickedhostbotai/db": ["packages/db/src/index.ts"],
-      "@wickedhostbotai/vector": ["packages/vector/src/index.ts"],
-      "@wickedhostbotai/ai": ["packages/ai/src/index.ts"],
-      "@wickedhostbotai/core": ["packages/core/src/index.ts"]
+      "@mimir/shared": ["packages/shared/src/index.ts"],
+      "@mimir/db": ["packages/db/src/index.ts"],
+      "@mimir/vector": ["packages/vector/src/index.ts"],
+      "@mimir/ai": ["packages/ai/src/index.ts"],
+      "@mimir/core": ["packages/core/src/index.ts"]
     },
     "declaration": true,
     "declarationMap": true,

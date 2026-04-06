@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { parseDatabaseEnv } from "@wickedhostbotai/shared";
+import { parseDatabaseEnv } from "@mimir/shared";
 
 import { createDatabaseConnection } from "./client.js";
 import { runMigrations } from "./runtime-migrate.js";

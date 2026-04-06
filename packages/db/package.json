@@ -1,5 +1,5 @@
 {
-  "name": "@wickedhostbotai/db",
+  "name": "@mimir/db",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,7 +16,7 @@
     "migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
-    "@wickedhostbotai/shared": "workspace:*",
+    "@mimir/shared": "workspace:*",
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.44.5",
     "pg": "^8.16.3"

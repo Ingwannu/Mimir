@@ -89,12 +89,9 @@ export function TopNav({ locale }: { locale: Locale }) {
             key={item.href}
             className={`nav-card ${active ? "is-active" : ""}`}
             href={item.href}
-            title={item.description}
           >
             <span className="nav-label">{item.label}</span>
-            <span className="nav-tooltip" role="tooltip">
-              {item.description}
-            </span>
+            <span className="nav-description">{item.description}</span>
           </Link>
         );
       })}

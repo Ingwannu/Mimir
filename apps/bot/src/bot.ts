@@ -13,7 +13,7 @@ import {
   type ChatInputCommandInteraction,
 } from "discord.js";
 
-import { parseBotEnv } from "@wickedhostbotai/shared";
+import { parseBotEnv } from "@mimir/shared";
 
 const env = parseBotEnv(process.env);
 
@@ -27,7 +27,7 @@ const state = {
 
 const askCommand = new SlashCommandBuilder()
   .setName("ask")
-  .setDescription("Ask the WickedHost knowledge base a question.")
+  .setDescription("Ask the Mimir knowledge base a question.")
   .addStringOption((option) =>
     option
       .setName("question")
@@ -560,7 +560,7 @@ function buildAnswerEmbed(
       : payload.citations.map((citation) => `- \`${citation}\``).join("\n");
 
   const embed = new EmbedBuilder()
-    .setTitle("WickedHost answer")
+    .setTitle("Mimir answer")
     .setDescription(trimBlock(payload.answer, 4000))
     .setColor(payload.needsHuman ? 0xb45309 : 0x1d4ed8)
     .addFields(

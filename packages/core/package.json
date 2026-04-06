@@ -1,5 +1,5 @@
 {
-  "name": "@wickedhostbotai/core",
+  "name": "@mimir/core",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -15,10 +15,10 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@wickedhostbotai/ai": "workspace:*",
-    "@wickedhostbotai/db": "workspace:*",
-    "@wickedhostbotai/shared": "workspace:*",
-    "@wickedhostbotai/vector": "workspace:*",
+    "@mimir/ai": "workspace:*",
+    "@mimir/db": "workspace:*",
+    "@mimir/shared": "workspace:*",
+    "@mimir/vector": "workspace:*",
     "drizzle-orm": "^0.44.5"
   }
 }

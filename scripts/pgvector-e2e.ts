@@ -3,17 +3,17 @@ import assert from "node:assert/strict";
 import {
   OpenAiAnswerProvider,
   OpenAiEmbeddingProvider,
-} from "@wickedhostbotai/ai";
-import { createCoreServices } from "@wickedhostbotai/core";
-import { createDatabaseConnection, runMigrations } from "@wickedhostbotai/db";
-import { createVectorStore } from "@wickedhostbotai/vector";
+} from "@mimir/ai";
+import { createCoreServices } from "@mimir/core";
+import { createDatabaseConnection, runMigrations } from "@mimir/db";
+import { createVectorStore } from "@mimir/vector";
 
 const databaseUrl =
   process.env.PGVECTOR_DATABASE_URL ??
-  "postgresql://wickedhost:wickedhost@127.0.0.1:5432/wickedhostbotai";
+  "postgresql://mimir:mimir@127.0.0.1:5432/mimir";
 const workspaceId = process.env.WORKSPACE_ID ?? "workspace_demo";
-const workspaceSlug = process.env.WORKSPACE_SLUG ?? "wickedhost";
-const workspaceName = process.env.WORKSPACE_NAME ?? "WickedHost";
+const workspaceSlug = process.env.WORKSPACE_SLUG ?? "mimir";
+const workspaceName = process.env.WORKSPACE_NAME ?? "Mimir";
 
 async function main(): Promise<void> {
   const connection = createDatabaseConnection(databaseUrl);

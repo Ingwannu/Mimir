@@ -1,5 +1,5 @@
 {
-  "name": "@wickedhostbotai/worker",
+  "name": "@mimir/worker",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,11 +10,11 @@
     "start": "node dist/worker.js"
   },
   "dependencies": {
-    "@wickedhostbotai/ai": "workspace:*",
-    "@wickedhostbotai/core": "workspace:*",
-    "@wickedhostbotai/db": "workspace:*",
-    "@wickedhostbotai/shared": "workspace:*",
-    "@wickedhostbotai/vector": "workspace:*",
+    "@mimir/ai": "workspace:*",
+    "@mimir/core": "workspace:*",
+    "@mimir/db": "workspace:*",
+    "@mimir/shared": "workspace:*",
+    "@mimir/vector": "workspace:*",
     "dotenv": "^16.6.1"
   }
 }

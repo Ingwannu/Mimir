@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-export const ADMIN_SESSION_COOKIE = "wickedhostbotai_session";
+export const ADMIN_SESSION_COOKIE = "mimir_session";
 const apiBaseUrl = process.env.WEB_API_BASE_URL ?? "http://localhost:4000";
 
 export interface SessionUser {
@@ -43,17 +43,21 @@ export async function hasValidSession(): Promise<boolean> {
 }
 
 export async function needsBootstrap(): Promise<boolean> {
-  const response = await fetch(`${apiBaseUrl}/v1/auth/bootstrap-status`, {
-    method: "GET",
-    cache: "no-store",
-  });
+  try {
+    const response = await fetch(`${apiBaseUrl}/v1/auth/bootstrap-status`, {
+      method: "GET",
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return false;
+    }
+
+    const payload = (await response.json()) as { needsBootstrap: boolean };
+    return payload.needsBootstrap;
+  } catch {
     return false;
   }
-
-  const payload = (await response.json()) as { needsBootstrap: boolean };
-  return payload.needsBootstrap;
 }
 
 export async function getAdminProxyHeaders(): Promise<Headers> {

@@ -5,11 +5,11 @@ import { createServer } from "node:http";
 import {
   OpenAiAnswerProvider,
   OpenAiEmbeddingProvider,
-} from "@wickedhostbotai/ai";
-import { createCoreServices } from "@wickedhostbotai/core";
-import { createDatabaseConnection, runMigrations } from "@wickedhostbotai/db";
-import { parseWorkerEnv } from "@wickedhostbotai/shared";
-import { createVectorStore } from "@wickedhostbotai/vector";
+} from "@mimir/ai";
+import { createCoreServices } from "@mimir/core";
+import { createDatabaseConnection, runMigrations } from "@mimir/db";
+import { parseWorkerEnv } from "@mimir/shared";
+import { createVectorStore } from "@mimir/vector";
 
 const env = parseWorkerEnv(process.env);
 const connection = createDatabaseConnection(env.DATABASE_URL);

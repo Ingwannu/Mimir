@@ -5,7 +5,7 @@ import {
   type StructuredAnswer,
   type TokenUsageSnapshot,
   structuredAnswerSchema,
-} from "@wickedhostbotai/shared";
+} from "@mimir/shared";
 
 export interface ProviderHealth {
   ok: boolean;

@@ -1,5 +1,5 @@
 {
-  "name": "wickedhostbotai",
+  "name": "mimir",
   "private": true,
   "packageManager": "pnpm@10.2.0",
   "scripts": {
@@ -7,11 +7,11 @@
     "typecheck": "pnpm -r typecheck",
     "test:stack": "tsx scripts/stack-smoke.ts",
     "test:pgvector": "tsx scripts/pgvector-e2e.ts",
-    "dev:api": "pnpm --filter @wickedhostbotai/api dev",
-    "dev:web": "pnpm --filter @wickedhostbotai/web dev",
-    "dev:bot": "pnpm --filter @wickedhostbotai/bot dev",
-    "dev:worker": "pnpm --filter @wickedhostbotai/worker dev",
-    "db:migrate": "pnpm --filter @wickedhostbotai/db migrate"
+    "dev:api": "pnpm --filter @mimir/api dev",
+    "dev:web": "pnpm --filter @mimir/web dev",
+    "dev:bot": "pnpm --filter @mimir/bot dev",
+    "dev:worker": "pnpm --filter @mimir/worker dev",
+    "db:migrate": "pnpm --filter @mimir/db migrate"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",

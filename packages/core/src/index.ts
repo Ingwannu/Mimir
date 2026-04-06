@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
-import type { Database } from "@wickedhostbotai/db";
+import type { Database } from "@mimir/db";
 import {
   auditLogs,
   authSessions,
@@ -19,8 +19,8 @@ import {
   queryLogs,
   users,
   workspaces,
-} from "@wickedhostbotai/db";
-import { buildAnswerPrompt, type AnswerProvider, type EmbeddingProvider } from "@wickedhostbotai/ai";
+} from "@mimir/db";
+import { buildAnswerPrompt, type AnswerProvider, type EmbeddingProvider } from "@mimir/ai";
 import type {
   AuthBootstrapInput,
   AuthLoginInput,
@@ -39,8 +39,8 @@ import type {
   QueryResponse,
   SourceLookupItem,
   TokenUsageSnapshot,
-} from "@wickedhostbotai/shared";
-import type { VectorStoreAdapter } from "@wickedhostbotai/vector";
+} from "@mimir/shared";
+import type { VectorStoreAdapter } from "@mimir/vector";
 import {
   createSessionToken,
   decryptSecret,

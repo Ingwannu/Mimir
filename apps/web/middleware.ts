@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_SESSION_COOKIE = "wickedhostbotai_session";
+const ADMIN_SESSION_COOKIE = "mimir_session";
 const apiBaseUrl = process.env.WEB_API_BASE_URL ?? "http://localhost:4000";
 
 export async function middleware(request: NextRequest) {

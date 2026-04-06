@@ -19,7 +19,7 @@ export function AppShell({
     <div className="app-shell">
       <aside className="sidebar">
         <p className="eyebrow">Self-hosted support RAG</p>
-        <h1>wickedhostbotai</h1>
+        <h1>Mimir</h1>
         <p className="sidebar-copy">
           Postgres stays authoritative. Qdrant stays index-only. The worker owns
           every chunk and embedding lifecycle.
