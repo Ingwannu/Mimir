@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 
@@ -41,14 +40,14 @@ export default async function RootLayout({
         <div className="shell">
           <header className="topbar">
             <div className="brand-block">
-              <Link className="brand-link" href="/">
+              <div className="brand-row">
                 <Image
                   alt="Mimir logo"
                   className="brand-logo"
-                  height={36}
+                  height={32}
                   priority
                   src="/mimir.svg"
-                  width={36}
+                  width={32}
                 />
                 <div className="brand-text">
                   <span className="brand">Mimir</span>
@@ -58,9 +57,11 @@ export default async function RootLayout({
                       : "Discord support RAG operator console"}
                   </span>
                 </div>
-              </Link>
+              </div>
             </div>
+
             <TopNav locale={locale} />
+
             <div className="topbar-actions">
               <LanguageToggle locale={locale} />
               {currentUser ? (
@@ -81,6 +82,7 @@ export default async function RootLayout({
               )}
             </div>
           </header>
+
           <main className="content">
             <div className="content-frame">{children}</div>
           </main>

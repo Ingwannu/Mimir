@@ -30,7 +30,7 @@ const NAV_ITEMS = {
     {
       href: "/jobs",
       label: "Jobs",
-      description: "Review indexing and logs",
+      description: "Review indexing jobs and logs",
     },
     {
       href: "/settings",
@@ -77,7 +77,10 @@ export function TopNav({ locale }: { locale: Locale }) {
   const items = NAV_ITEMS[locale];
 
   return (
-    <nav className="nav-grid">
+    <nav
+      aria-label={locale === "ko" ? "주요 메뉴" : "Primary navigation"}
+      className="nav-grid"
+    >
       {items.map((item) => {
         const active =
           item.href === "/"
@@ -87,14 +90,12 @@ export function TopNav({ locale }: { locale: Locale }) {
         return (
           <Link
             key={item.href}
+            aria-current={active ? "page" : undefined}
             className={`nav-card ${active ? "is-active" : ""}`}
             href={item.href}
-            title={item.description}
           >
             <span className="nav-label">{item.label}</span>
-            <span className="nav-tooltip" role="tooltip">
-              {item.description}
-            </span>
+            <span className="nav-description">{item.description}</span>
           </Link>
         );
       })}
