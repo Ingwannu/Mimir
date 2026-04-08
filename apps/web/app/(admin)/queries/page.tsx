@@ -1,9 +1,10 @@
-import { QueryLab } from "../components/query-lab";
-import { getLocale } from "../locale-server";
+import { QueryLab } from "../../components/query-lab";
+import { getLocale } from "../../locale-server";
 
 export default async function QueriesPage() {
   const locale = await getLocale();
   const isKo = locale === "ko";
+
   return (
     <div className="page">
       <section className="panel">
@@ -15,6 +16,7 @@ export default async function QueriesPage() {
             : "Test retrieval before it reaches Discord. Preview the assembled prompt, returned chunks, structured answer, and confidence score in one place."}
         </p>
       </section>
+
       <QueryLab locale={locale} />
     </div>
   );

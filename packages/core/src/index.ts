@@ -33,6 +33,11 @@ import type {
   KnowledgeBaseUpdateInput,
   KnowledgeEntryCreateInput,
   KnowledgeEntryUpdateInput,
+  PublicAskResponse,
+  PublicDocDetail,
+  PublicDocLink,
+  PublicDocsIndex,
+  PublicSearchResult,
   ProviderSettingsInput,
   QueryPreviewResponse,
   QueryRequest,
@@ -673,6 +678,289 @@ export function createCoreServices(options: CoreServicesOptions) {
     return citationIds
       .map((citationId) => byId.get(citationId))
       .filter((row): row is NonNullable<typeof row> => Boolean(row));
+  }
+
+  async function listPublicDocs(): Promise<PublicDocsIndex> {
+    const bases = await db
+      .select()
+      .from(knowledgeBases)
+      .where(
+        and(
+          eq(knowledgeBases.workspaceId, workspace.id),
+          isNull(knowledgeBases.deletedAt),
+        ),
+      )
+      .orderBy(knowledgeBases.name);
+
+    const entries = await db
+      .select()
+      .from(knowledgeEntries)
+      .where(
+        and(
+          eq(knowledgeEntries.workspaceId, workspace.id),
+          eq(knowledgeEntries.visibility, "public"),
+          eq(knowledgeEntries.status, "published"),
+          isNull(knowledgeEntries.deletedAt),
+        ),
+      )
+      .orderBy(knowledgeEntries.title);
+
+    const activeVersionIds = entries
+      .map((entry) => entry.activeVersionId)
+      .filter((value): value is string => Boolean(value));
+    const versions =
+      activeVersionIds.length === 0
+        ? []
+        : await db
+            .select()
+            .from(entryVersions)
+            .where(inArray(entryVersions.id, activeVersionIds));
+    const versionsById = new Map(versions.map((version) => [version.id, version]));
+
+    const entryGroups = new Map<string, PublicDocLink[]>();
+
+    for (const entry of entries) {
+      const knowledgeBase = bases.find((base) => base.id === entry.knowledgeBaseId);
+
+      if (!knowledgeBase) {
+        continue;
+      }
+
+      const links = entryGroups.get(entry.knowledgeBaseId) ?? [];
+      links.push(
+        toPublicDocLink(
+          knowledgeBase,
+          entry,
+          summarizeContent(
+            versionsById.get(entry.activeVersionId ?? "")?.content,
+            entry.title,
+          ),
+        ),
+      );
+      entryGroups.set(entry.knowledgeBaseId, links);
+    }
+
+    return {
+      knowledgeBases: bases
+        .map((base) => ({
+          knowledgeBaseId: base.id,
+          name: base.name,
+          slug: base.slug,
+          description: base.description ?? null,
+          entries: entryGroups.get(base.id) ?? [],
+        }))
+        .filter((group) => group.entries.length > 0),
+    };
+  }
+
+  async function getPublicDocByRoute(
+    knowledgeBaseSlug: string,
+    entrySlug: string,
+  ): Promise<PublicDocDetail | null> {
+    const entryId = extractEntryIdFromSlug(entrySlug);
+
+    if (!entryId) {
+      return null;
+    }
+
+    const [row] = await db
+      .select({
+        knowledgeBaseId: knowledgeBases.id,
+        knowledgeBaseName: knowledgeBases.name,
+        knowledgeBaseSlug: knowledgeBases.slug,
+        entryId: knowledgeEntries.id,
+        title: knowledgeEntries.title,
+        category: knowledgeEntries.category,
+        tags: knowledgeEntries.tags,
+        updatedAt: knowledgeEntries.updatedAt,
+        activeVersionId: knowledgeEntries.activeVersionId,
+      })
+      .from(knowledgeEntries)
+      .innerJoin(knowledgeBases, eq(knowledgeBases.id, knowledgeEntries.knowledgeBaseId))
+      .where(
+        and(
+          eq(knowledgeBases.slug, knowledgeBaseSlug),
+          eq(knowledgeEntries.id, entryId),
+          eq(knowledgeEntries.visibility, "public"),
+          eq(knowledgeEntries.status, "published"),
+          isNull(knowledgeEntries.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    if (!row || !row.activeVersionId) {
+      return null;
+    }
+
+    const [version] = await db
+      .select()
+      .from(entryVersions)
+      .where(eq(entryVersions.id, row.activeVersionId))
+      .limit(1);
+
+    if (!version) {
+      return null;
+    }
+
+    const relatedEntries = await db
+      .select()
+      .from(knowledgeEntries)
+      .where(
+        and(
+          eq(knowledgeEntries.knowledgeBaseId, row.knowledgeBaseId),
+          eq(knowledgeEntries.visibility, "public"),
+          eq(knowledgeEntries.status, "published"),
+          isNull(knowledgeEntries.deletedAt),
+        ),
+      )
+      .orderBy(knowledgeEntries.title);
+    const relatedVersionIds = relatedEntries
+      .map((entry) => entry.activeVersionId)
+      .filter((value): value is string => Boolean(value));
+    const relatedVersions =
+      relatedVersionIds.length === 0
+        ? []
+        : await db
+            .select()
+            .from(entryVersions)
+            .where(inArray(entryVersions.id, relatedVersionIds));
+    const relatedVersionsById = new Map(
+      relatedVersions.map((version) => [version.id, version]),
+    );
+
+    const knowledgeBase = {
+      id: row.knowledgeBaseId,
+      name: row.knowledgeBaseName,
+      slug: row.knowledgeBaseSlug,
+      description: null,
+    };
+
+    return {
+      knowledgeBaseId: row.knowledgeBaseId,
+      knowledgeBaseName: row.knowledgeBaseName,
+      knowledgeBaseSlug: row.knowledgeBaseSlug,
+      entryId: row.entryId,
+      entrySlug: buildEntrySlug(row.title, row.entryId),
+      title: row.title,
+      category: row.category ?? null,
+      tags: row.tags,
+      updatedAt: row.updatedAt.toISOString(),
+      content: version.content,
+      relatedEntries: relatedEntries
+        .filter((entry) => entry.id !== row.entryId)
+        .map((entry) =>
+          toPublicDocLink(
+            knowledgeBase,
+            entry,
+            summarizeContent(
+              relatedVersionsById.get(entry.activeVersionId ?? "")?.content,
+              entry.title,
+            ),
+          ),
+        ),
+    };
+  }
+
+  async function searchPublicDocs(
+    question: string,
+    knowledgeBaseSlugs: string[] = [],
+  ): Promise<PublicSearchResult> {
+    const knowledgeBaseIds = await resolvePublicKnowledgeBaseIds(knowledgeBaseSlugs);
+    const embedding = await embeddingProvider.embed([question], {
+      model: (await getActiveModelProfile())?.embeddingModel ?? defaults.embeddingModel,
+    });
+    const hits = await vectorStore.query({
+      workspaceId: workspace.id,
+      knowledgeBaseIds,
+      vector: embedding[0] ?? [],
+      topK: 8,
+      filter: {
+        visibility: "public",
+        status: "published",
+      },
+    });
+
+    const entryIds = Array.from(new Set(hits.map((hit) => hit.entryId)));
+    const entries =
+      entryIds.length === 0
+        ? []
+        : await db
+            .select()
+            .from(knowledgeEntries)
+            .where(inArray(knowledgeEntries.id, entryIds));
+    const bases =
+      knowledgeBaseIds.length === 0
+        ? await db.select().from(knowledgeBases)
+        : await db
+            .select()
+            .from(knowledgeBases)
+            .where(inArray(knowledgeBases.id, knowledgeBaseIds));
+
+    return {
+      question,
+      results: hits
+        .map((hit) => {
+          const entry = entries.find((item) => item.id === hit.entryId);
+          const knowledgeBase = bases.find((item) => item.id === hit.knowledgeBaseId);
+
+          if (!entry || !knowledgeBase) {
+            return null;
+          }
+
+          return {
+            ...toPublicDocLink(knowledgeBase, entry, summarizeContent(hit.content, entry.title)),
+            chunkId: hit.chunkId,
+            score: hit.score,
+            excerpt: hit.content,
+          };
+        })
+        .filter((result): result is NonNullable<typeof result> => Boolean(result)),
+    };
+  }
+
+  async function askPublicDocs(
+    question: string,
+    knowledgeBaseSlugs: string[] = [],
+  ): Promise<PublicAskResponse> {
+    const knowledgeBaseIds = await resolvePublicKnowledgeBaseIds(knowledgeBaseSlugs);
+    const execution = await executeQueryPipeline({
+      workspaceId: workspace.id,
+      question,
+      knowledgeBaseIds,
+    }, {
+      visibility: "public",
+      status: "published",
+    });
+    const sources = await searchPublicDocs(question, knowledgeBaseSlugs);
+
+    return {
+      answer: execution.answer,
+      citations: execution.citations,
+      confidence: execution.confidence,
+      needsHuman: execution.needsHuman,
+      sources: sources.results.slice(0, 6),
+    };
+  }
+
+  async function resolvePublicKnowledgeBaseIds(
+    slugs: string[],
+  ): Promise<string[]> {
+    if (slugs.length === 0) {
+      return [];
+    }
+
+    const rows = await db
+      .select({ id: knowledgeBases.id })
+      .from(knowledgeBases)
+      .where(
+        and(
+          eq(knowledgeBases.workspaceId, workspace.id),
+          inArray(knowledgeBases.slug, slugs),
+          isNull(knowledgeBases.deletedAt),
+        ),
+      );
+
+    return rows.map((row) => row.id);
   }
 
   async function getEntry(entryId: string) {
@@ -1447,6 +1735,7 @@ export function createCoreServices(options: CoreServicesOptions) {
 
   async function executeQueryPipeline(
     input: QueryRequest,
+    extraFilter?: Record<string, unknown>,
   ): Promise<QueryExecutionResult> {
     const profile = await getActiveModelProfile();
     const maxContextChunks =
@@ -1461,6 +1750,7 @@ export function createCoreServices(options: CoreServicesOptions) {
       topK: Math.max(maxContextChunks * 2, 6),
       filter: {
         status: "published",
+        ...(extraFilter ?? {}),
       },
     });
     const answer = await answerProvider.answer({
@@ -1939,6 +2229,26 @@ export function createCoreServices(options: CoreServicesOptions) {
     return profile ?? null;
   }
 
+  async function resolvePublicKnowledgeBases(knowledgeBaseSlugs?: string[]) {
+    const conditions = [
+      eq(knowledgeBases.workspaceId, workspace.id),
+      isNull(knowledgeBases.deletedAt),
+    ];
+
+    if (knowledgeBaseSlugs && knowledgeBaseSlugs.length > 0) {
+      conditions.push(inArray(knowledgeBases.slug, knowledgeBaseSlugs));
+    }
+
+    return db
+      .select({
+        id: knowledgeBases.id,
+        name: knowledgeBases.name,
+        slug: knowledgeBases.slug,
+      })
+      .from(knowledgeBases)
+      .where(and(...conditions));
+  }
+
   async function getOpenAiApiKey(): Promise<string | undefined> {
     return getSecret("openai_api_key");
   }
@@ -1957,6 +2267,10 @@ export function createCoreServices(options: CoreServicesOptions) {
     getHealth,
     getOpenAiApiKey,
     getDiscordBotToken,
+    listPublicDocs,
+    getPublicDocByRoute,
+    searchPublicDocs,
+    askPublicDocs,
     getKnowledgeBase,
     listKnowledgeBases,
     createKnowledgeBase,
@@ -1993,6 +2307,17 @@ function checksumText(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function toPublicDocSlug(title: string, id: string): string {
+  const base = title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const shortId = id.split("_")[1]?.slice(0, 8) ?? id.slice(0, 8);
+
+  return `${base || "doc"}-${shortId}`;
+}
+
 function chunkText(
   value: string,
   chunkSize: number,
@@ -2026,4 +2351,56 @@ function chunkText(
   }
 
   return pieces;
+}
+
+function toPublicDocLink(
+  knowledgeBase: {
+    id: string;
+    name: string;
+    slug: string;
+  },
+  entry: {
+    id: string;
+    title: string;
+    category: string | null;
+    updatedAt: Date;
+  },
+  summary?: string,
+): PublicDocLink {
+  return {
+    knowledgeBaseId: knowledgeBase.id,
+    knowledgeBaseName: knowledgeBase.name,
+    knowledgeBaseSlug: knowledgeBase.slug,
+    entryId: entry.id,
+    entrySlug: buildEntrySlug(entry.title, entry.id),
+    title: entry.title,
+    category: entry.category ?? null,
+    summary: summary ?? entry.title,
+    updatedAt: entry.updatedAt.toISOString(),
+  };
+}
+
+function buildEntrySlug(title: string, entryId: string): string {
+  return `${slugify(title)}--${entryId}`;
+}
+
+function extractEntryIdFromSlug(value: string): string | null {
+  const parts = value.split("--");
+  return parts.length >= 2 ? parts[parts.length - 1] ?? null : null;
+}
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9가-힣\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+function summarizeContent(content: string | undefined, fallback: string): string {
+  const normalized = (content ?? fallback).replace(/\s+/g, " ").trim();
+  return normalized.length <= 180
+    ? normalized
+    : `${normalized.slice(0, 177)}...`;
 }

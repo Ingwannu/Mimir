@@ -9,6 +9,7 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/proxy") ||
+    pathname.startsWith("/docs") ||
     pathname === "/favicon.ico" ||
     /\.[a-zA-Z0-9]+$/.test(pathname)
   ) {

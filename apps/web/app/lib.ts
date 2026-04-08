@@ -141,6 +141,69 @@ export interface SourceLookupItem {
   ordinal: number;
 }
 
+export interface PublicDocLink {
+  knowledgeBaseId: string;
+  knowledgeBaseName: string;
+  knowledgeBaseSlug: string;
+  entryId: string;
+  entrySlug: string;
+  title: string;
+  category: string | null;
+  summary: string;
+  updatedAt: string;
+}
+
+export interface PublicDocsGroup {
+  knowledgeBaseId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  entries: PublicDocLink[];
+}
+
+export interface PublicDocsIndex {
+  knowledgeBases: PublicDocsGroup[];
+}
+
+export interface PublicDocDetail {
+  knowledgeBaseId: string;
+  knowledgeBaseName: string;
+  knowledgeBaseSlug: string;
+  entryId: string;
+  entrySlug: string;
+  title: string;
+  category: string | null;
+  tags: string[];
+  updatedAt: string;
+  content: string;
+  relatedEntries: PublicDocLink[];
+}
+
+export interface PublicSearchResult {
+  question: string;
+  results: Array<
+    PublicDocLink & {
+      chunkId: string;
+      score: number;
+      excerpt: string;
+    }
+  >;
+}
+
+export interface PublicAskResponse {
+  answer: string;
+  citations: string[];
+  confidence: number;
+  needsHuman: boolean;
+  sources: Array<
+    PublicDocLink & {
+      chunkId: string;
+      score: number;
+      excerpt: string;
+    }
+  >;
+}
+
 export async function getApiHealth(): Promise<ApiHealthSnapshot | null> {
   return safeFetchJson<ApiHealthSnapshot>("/v1/health");
 }
@@ -228,6 +291,53 @@ export async function lookupSources(
     body: {
       workspaceId: process.env.WORKSPACE_ID ?? "workspace_demo",
       citationIds,
+    },
+  });
+}
+
+export async function getPublicDocsIndex(): Promise<PublicDocsIndex | null> {
+  return safeFetchJson<PublicDocsIndex>("/v1/public/docs");
+}
+
+export async function getPublicDocDetail(
+  knowledgeBaseSlug: string,
+  entrySlug: string,
+): Promise<PublicDocDetail | null> {
+  return safeFetchJson<PublicDocDetail>(
+    `/v1/public/docs/${encodeURIComponent(knowledgeBaseSlug)}/${encodeURIComponent(entrySlug)}`,
+  );
+}
+
+export async function searchPublicDocs(input: {
+  question: string;
+  knowledgeBaseSlugs?: string[];
+}): Promise<PublicSearchResult | null> {
+  if (!input.question.trim()) {
+    return null;
+  }
+
+  return fetchJson<PublicSearchResult>("/v1/public/search", {
+    method: "POST",
+    body: {
+      question: input.question.trim(),
+      knowledgeBaseSlugs: input.knowledgeBaseSlugs ?? [],
+    },
+  });
+}
+
+export async function askPublicDocs(input: {
+  question: string;
+  knowledgeBaseSlugs?: string[];
+}): Promise<PublicAskResponse | null> {
+  if (!input.question.trim()) {
+    return null;
+  }
+
+  return fetchJson<PublicAskResponse>("/v1/public/ask", {
+    method: "POST",
+    body: {
+      question: input.question.trim(),
+      knowledgeBaseSlugs: input.knowledgeBaseSlugs ?? [],
     },
   });
 }

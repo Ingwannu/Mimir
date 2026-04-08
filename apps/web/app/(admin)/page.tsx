@@ -1,4 +1,4 @@
-import { getLocale } from "./locale-server";
+import { getLocale } from "../locale-server";
 
 export const dynamic = "force-dynamic";
 
@@ -77,8 +77,8 @@ export default async function HomePage() {
         </h2>
         <p>
           {isKo
-            ? "이 콘솔은 모든 대시보드 변경을 Postgres에 기록하고, 파생 chunk와 embedding만 Qdrant에 넣으며, Discord 봇은 API만 호출하는 얇은 입출력 계층으로 유지합니다."
-            : "This build keeps every dashboard edit in Postgres, pushes derived chunks into Qdrant, and leaves the Discord bot as a thin transport layer that only calls the API."}
+            ? "이 콘솔은 모든 대시보드 변경을 Postgres에 기록하고, 파생 chunk와 embedding만 검색 인덱스에 넣으며, Discord 봇은 API만 호출하는 얇은 계층으로 유지합니다."
+            : "This console records dashboard changes in Postgres, keeps only derived chunks and embeddings in the search index, and leaves the Discord bot as a thin API-only layer."}
         </p>
         <div className={`health ${health.ok ? "" : "offline"}`}>
           <span className="status-dot" />
@@ -116,7 +116,7 @@ export default async function HomePage() {
           <strong>{isKo ? "초기 설정" : "Setup flow"}</strong>
           <p>
             {isKo
-              ? "첫 지식 베이스를 공개하기 전에 provider, 모델, Discord 기본값을 먼저 저장하세요."
+              ? "첫 KB를 공개하기 전에 provider, 모델, Discord 기본값을 먼저 저장하세요."
               : "Save provider, model, and Discord defaults before publishing the first KB."}
           </p>
         </div>
@@ -124,7 +124,7 @@ export default async function HomePage() {
           <strong>{isKo ? "버전 안전 CRUD" : "Version-safe CRUD"}</strong>
           <p>
             {isKo
-              ? "수정 시 먼저 새 버전을 만들고, 워커가 인덱싱을 마친 뒤 active version을 교체합니다."
+              ? "수정 시 먼저 새 버전을 만들고, 워커가 색인을 마친 뒤 active version을 교체합니다."
               : "Edits create new entry versions first, then the worker swaps active versions after indexing."}
           </p>
         </div>

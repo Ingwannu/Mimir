@@ -19,12 +19,17 @@ import {
   knowledgeEntryCreateSchema,
   knowledgeEntryUpdateSchema,
   parseApiEnv,
+  publicDocsQuerySchema,
   providerSettingsSchema,
   queryRequestSchema,
 } from "@mimir/shared";
 import { createVectorStore } from "@mimir/vector";
 
 const idParamSchema = z.object({ id: z.string().min(1) });
+const publicDocParamsSchema = z.object({
+  kbSlug: z.string().min(1),
+  entrySlug: z.string().min(1),
+});
 const sourceLookupSchema = z.object({
   citations: z.array(z.string().min(1)).optional(),
   citationIds: z.array(z.string().min(1)).optional(),
@@ -246,6 +251,30 @@ async function main(): Promise<void> {
   app.post("/v1/query/sources", async (request) => {
     const parsed = sourceLookupSchema.parse(request.body);
     return services.lookupSources(parsed.citations ?? parsed.citationIds ?? []);
+  });
+
+  app.get("/v1/public/docs", async () => services.listPublicDocs());
+
+  app.get("/v1/public/docs/:kbSlug/:entrySlug", async (request, reply) => {
+    const params = publicDocParamsSchema.parse(request.params);
+    const doc = await services.getPublicDocByRoute(params.kbSlug, params.entrySlug);
+
+    if (!doc) {
+      reply.status(404);
+      return { message: "Document not found." };
+    }
+
+    return doc;
+  });
+
+  app.post("/v1/public/search", async (request) => {
+    const parsed = publicDocsQuerySchema.parse(request.body);
+    return services.searchPublicDocs(parsed.question, parsed.knowledgeBaseSlugs);
+  });
+
+  app.post("/v1/public/ask", async (request) => {
+    const parsed = publicDocsQuerySchema.parse(request.body);
+    return services.askPublicDocs(parsed.question, parsed.knowledgeBaseSlugs);
   });
 
   app.get("/v1/admin/dashboard", async () => services.getDashboardSummary());

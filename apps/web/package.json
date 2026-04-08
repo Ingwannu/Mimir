@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node -e \"require('node:fs').rmSync('.next',{recursive:true,force:true})\" && next build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "start": "next start -H 0.0.0.0 -p 3000"

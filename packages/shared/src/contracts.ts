@@ -87,6 +87,86 @@ export const sourceLookupItemSchema = z.object({
   ordinal: z.number().int().nonnegative(),
 });
 
+export const publicDocsSearchSchema = z.object({
+  workspaceId: z.string().min(1),
+  query: z.string().min(1),
+  knowledgeBaseIds: z.array(z.string().min(1)).default([]),
+});
+
+export const publicDocsAskSchema = z.object({
+  workspaceId: z.string().min(1),
+  question: z.string().min(1),
+  knowledgeBaseIds: z.array(z.string().min(1)).default([]),
+});
+
+export const publicDocsQuerySchema = z.object({
+  question: z.string().min(1),
+  knowledgeBaseSlugs: z.array(z.string().min(1)).default([]),
+});
+
+export const publicDocLinkSchema = z.object({
+  knowledgeBaseId: z.string().min(1),
+  knowledgeBaseName: z.string().min(1),
+  knowledgeBaseSlug: z.string().min(1),
+  entryId: z.string().min(1),
+  entrySlug: z.string().min(1),
+  title: z.string().min(1),
+  category: z.string().nullable(),
+  summary: z.string(),
+  updatedAt: z.string(),
+});
+
+export const publicDocsGroupSchema = z.object({
+  knowledgeBaseId: z.string().min(1),
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  description: z.string().nullable(),
+  entries: z.array(publicDocLinkSchema),
+});
+
+export const publicDocsIndexSchema = z.object({
+  knowledgeBases: z.array(publicDocsGroupSchema),
+});
+
+export const publicDocDetailSchema = z.object({
+  knowledgeBaseId: z.string().min(1),
+  knowledgeBaseName: z.string().min(1),
+  knowledgeBaseSlug: z.string().min(1),
+  entryId: z.string().min(1),
+  entrySlug: z.string().min(1),
+  title: z.string().min(1),
+  category: z.string().nullable(),
+  tags: z.array(z.string()),
+  updatedAt: z.string(),
+  content: z.string(),
+  relatedEntries: z.array(publicDocLinkSchema),
+});
+
+export const publicSearchResultSchema = z.object({
+  question: z.string(),
+  results: z.array(
+    publicDocLinkSchema.extend({
+      chunkId: z.string().min(1),
+      score: z.number(),
+      excerpt: z.string(),
+    }),
+  ),
+});
+
+export const publicAskResponseSchema = z.object({
+  answer: z.string(),
+  citations: z.array(z.string()),
+  confidence: z.number(),
+  needsHuman: z.boolean(),
+  sources: z.array(
+    publicDocLinkSchema.extend({
+      chunkId: z.string().min(1),
+      score: z.number(),
+      excerpt: z.string(),
+    }),
+  ),
+});
+
 export const knowledgeBaseCreateSchema = z.object({
   workspaceId: z.string().min(1),
   name: z.string().min(1),
@@ -213,6 +293,13 @@ export type QueryResponse = z.infer<typeof queryResponseSchema>;
 export type QueryPreviewResponse = z.infer<typeof queryPreviewResponseSchema>;
 export type SourceLookupRequest = z.infer<typeof sourceLookupRequestSchema>;
 export type SourceLookupItem = z.infer<typeof sourceLookupItemSchema>;
+export type PublicDocsQuery = z.infer<typeof publicDocsQuerySchema>;
+export type PublicDocLink = z.infer<typeof publicDocLinkSchema>;
+export type PublicDocsGroup = z.infer<typeof publicDocsGroupSchema>;
+export type PublicDocsIndex = z.infer<typeof publicDocsIndexSchema>;
+export type PublicDocDetail = z.infer<typeof publicDocDetailSchema>;
+export type PublicSearchResult = z.infer<typeof publicSearchResultSchema>;
+export type PublicAskResponse = z.infer<typeof publicAskResponseSchema>;
 export type KnowledgeBaseCreateInput = z.infer<typeof knowledgeBaseCreateSchema>;
 export type KnowledgeBaseUpdateInput = z.infer<typeof knowledgeBaseUpdateSchema>;
 export type KnowledgeEntryCreateInput = z.infer<typeof knowledgeEntryCreateSchema>;

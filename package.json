@@ -3,7 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.2.0",
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm -r --workspace-concurrency=1 build",
     "typecheck": "pnpm -r typecheck",
     "test:stack": "tsx scripts/stack-smoke.ts",
     "test:pgvector": "tsx scripts/pgvector-e2e.ts",

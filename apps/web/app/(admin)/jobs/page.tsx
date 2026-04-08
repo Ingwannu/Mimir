@@ -1,9 +1,10 @@
-import { JobsConsole } from "../components/jobs-console";
-import { getLocale } from "../locale-server";
+import { JobsConsole } from "../../components/jobs-console";
+import { getLocale } from "../../locale-server";
 
 export default async function JobsPage() {
   const locale = await getLocale();
   const isKo = locale === "ko";
+
   return (
     <div className="page">
       <section className="panel">
@@ -15,6 +16,7 @@ export default async function JobsPage() {
             : "Worker jobs keep ingestion and deletion asynchronous so the dashboard stays responsive and version swaps remain atomic."}
         </p>
       </section>
+
       <JobsConsole locale={locale} />
     </div>
   );
