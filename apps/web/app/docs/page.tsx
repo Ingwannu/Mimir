@@ -28,8 +28,9 @@ export default async function DocsIndexPage() {
   }
 
   return (
-    <DocsShell index={docs} locale={locale} utility={<DocsAskPanel locale={locale} />}>
+    <DocsShell index={docs} locale={locale}>
       <div className="docs-home">
+        <DocsAskPanel locale={locale} />
         <p className="eyebrow">{isKo ? "문서 홈" : "Docs home"}</p>
         <h1>{isKo ? "Mimir 공개 문서" : "Mimir public docs"}</h1>
         <p>
@@ -38,10 +39,32 @@ export default async function DocsIndexPage() {
             : "Use the left navigation or search to jump directly to the document you need."}
         </p>
 
+        <div className="docs-overview-strip">
+          <div className="docs-overview-card">
+            <strong>{docs.knowledgeBases.length}</strong>
+            <span>{isKo ? "지식베이스" : "Knowledge bases"}</span>
+          </div>
+          <div className="docs-overview-card">
+            <strong>
+              {docs.knowledgeBases.reduce((sum, group) => sum + group.entries.length, 0)}
+            </strong>
+            <span>{isKo ? "공개 문서" : "Published docs"}</span>
+          </div>
+        </div>
+
         <div className="docs-home-grid">
           {docs.knowledgeBases.map((group) => (
-            <section key={group.knowledgeBaseId} className="docs-home-card">
-              <h2>{group.name}</h2>
+            <section
+              key={group.knowledgeBaseId}
+              className="docs-home-card"
+              id={group.slug}
+            >
+              <div className="docs-home-card-head">
+                <h2>{group.name}</h2>
+                <small>
+                  {group.entries.length} {isKo ? "문서" : "docs"}
+                </small>
+              </div>
               <span>{group.description ?? (isKo ? "설명 없음" : "No description")}</span>
               <div className="docs-home-links">
                 {group.entries.slice(0, 4).map((entry) => (

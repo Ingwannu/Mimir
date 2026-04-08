@@ -21,6 +21,10 @@ export function DocsShell({
   utility?: ReactNode;
 }) {
   const isKo = locale === "ko";
+  const totalEntries = index.knowledgeBases.reduce(
+    (sum, group) => sum + group.entries.length,
+    0,
+  );
 
   return (
     <div className="docs-layout">
@@ -35,6 +39,17 @@ export function DocsShell({
           </p>
         </div>
 
+        <div className="docs-sidebar-meta">
+          <div className="docs-sidebar-stat">
+            <strong>{index.knowledgeBases.length}</strong>
+            <span>{isKo ? "지식베이스" : "Knowledge bases"}</span>
+          </div>
+          <div className="docs-sidebar-stat">
+            <strong>{totalEntries}</strong>
+            <span>{isKo ? "공개 문서" : "Published docs"}</span>
+          </div>
+        </div>
+
         <form action="/docs/search" className="docs-search-form" method="GET">
           <input
             className="input"
@@ -47,11 +62,24 @@ export function DocsShell({
           </button>
         </form>
 
+        <div className="docs-sidebar-home">
+          <Link
+            className={`docs-sidebar-link ${!current?.entrySlug ? "is-active" : ""}`}
+            href="/docs"
+          >
+            <strong>{isKo ? "문서 홈" : "Docs home"}</strong>
+            <small>{isKo ? "전체 문서와 지식베이스 보기" : "Browse all docs and knowledge bases"}</small>
+          </Link>
+        </div>
+
         <div className="docs-sidebar-groups">
           {index.knowledgeBases.map((group) => (
             <section key={group.knowledgeBaseId} className="docs-sidebar-group">
               <div className="docs-sidebar-group-head">
                 <strong>{group.name}</strong>
+                <small>
+                  {group.entries.length} {isKo ? "문서" : "docs"}
+                </small>
                 {group.description ? <span>{group.description}</span> : null}
               </div>
               <div className="docs-sidebar-links">
@@ -80,7 +108,13 @@ export function DocsShell({
       <section className="docs-content">{children}</section>
 
       <aside className="docs-utility">
-        <div className="docs-utility-stack">{utility}</div>
+        <div className="docs-utility-stack">
+          <div className="docs-utility-header">
+            <p className="eyebrow">{isKo ? "도구" : "Tools"}</p>
+            <h3>{isKo ? "문서 도우미" : "Docs assistant"}</h3>
+          </div>
+          {utility}
+        </div>
       </aside>
     </div>
   );

@@ -6,6 +6,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Mimir",
   description: "Self-hosted Discord support RAG scaffold",
+  icons: {
+    icon: "/mimir.svg",
+    shortcut: "/mimir.svg",
+    apple: "/mimir.svg",
+  },
 };
 
 const sans = Instrument_Sans({

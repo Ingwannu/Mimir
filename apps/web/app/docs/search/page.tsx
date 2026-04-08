@@ -39,6 +39,13 @@ export default async function DocsSearchPage({ searchParams }: SearchPageProps) 
               : "Enter a query to search across the public docs."}
         </p>
 
+        {query ? (
+          <div className="docs-query-chip">
+            <span className="eyebrow">{isKo ? "검색어" : "Query"}</span>
+            <strong>{query}</strong>
+          </div>
+        ) : null}
+
         {result?.results.length ? (
           <div className="docs-result-list">
             {result.results.map((item) => (

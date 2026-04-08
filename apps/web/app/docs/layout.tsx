@@ -26,14 +26,23 @@ export default async function DocsLayout({
             <div className="brand-text">
               <span className="brand">Mimir Docs</span>
               <span className="brand-subtitle">
-                {isKo ? "공개 문서와 검색" : "Public docs and search"}
+                {isKo ? "깔끔하게 정리된 공개 문서와 빠른 검색" : "Structured public docs with fast search"}
               </span>
             </div>
           </Link>
         </div>
 
+        <form action="/docs/search" className="docs-top-search" method="GET">
+          <input
+            className="input"
+            name="q"
+            placeholder={isKo ? "문서 검색..." : "Search docs..."}
+            type="search"
+          />
+        </form>
+
         <div className="docs-topbar-actions">
-          <Link className="button button-secondary small" href="/">
+          <Link className="docs-admin-link" href="/">
             {isKo ? "관리자 콘솔" : "Admin"}
           </Link>
           <LanguageToggle locale={locale} />
@@ -41,7 +50,7 @@ export default async function DocsLayout({
       </header>
 
       <main className="content">
-        <div className="content-frame">{children}</div>
+        <div className="content-frame docs-content-frame">{children}</div>
       </main>
     </div>
   );
